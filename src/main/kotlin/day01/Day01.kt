@@ -60,7 +60,7 @@ class Day01(day: Int, isTest: Boolean) : Day(day, isTest) {
 fun main() {
     val dayTest = Day01(1, isTest=true)
     //check(dayTest.runPart1() == 142L)
-    //check(dayTest.runPart2() == 281L)
+    check(dayTest.runPart2() == 281L)
 
     val day = Day01(1, false)
     //println(day.runPart1())
