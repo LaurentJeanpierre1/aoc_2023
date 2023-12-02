@@ -1,7 +1,6 @@
 package day02
 
 import Day
-import java.util.Scanner
 
 class Day02(day: Int, isTest: Boolean) : Day(day, isTest) {
     override fun part1(data: Sequence<String>): Long {
@@ -34,9 +33,6 @@ class Day02(day: Int, isTest: Boolean) : Day(day, isTest) {
         var sum = 0L
         for(line in data) {
             val elts = line.split(":",";")
-            val gameId = elts[0]
-                .drop(5) // remove "Game "
-                .toInt()
             var minB = 0
             var minG = 0
             var minR = 0
