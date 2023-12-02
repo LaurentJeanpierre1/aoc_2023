@@ -1,6 +1,7 @@
 package day01
 
 import Day
+import kotlin.time.measureTime
 
 class Day01(day: Int, isTest: Boolean) : Day(day, isTest) {
     override fun part1(data: Sequence<String>): Long {
@@ -14,12 +15,12 @@ class Day01(day: Int, isTest: Boolean) : Day(day, isTest) {
 
 
     //nineninesixskjkbhx6nineoneightj ---> attention au eigth final
-    override fun part2(data: Sequence<String>): Long {
+    /*override*/ fun part2_mine(data: Sequence<String>): Long {
         val digits = data
-            .map {line->
+            .map { line ->
                 val first = Regex("(one)|(two)|(three)|(four)|(five)|(six)|(seven)|(eight)|(nine)|[0-9]")
                     .find(line)!!
-                val d1 = when(first.value){
+                val d1 = when (first.value) {
                     "one" -> "1"
                     "two" -> "2"
                     "three" -> "3"
@@ -33,7 +34,7 @@ class Day01(day: Int, isTest: Boolean) : Day(day, isTest) {
                 }.first()
                 val second = Regex("(eno)|(owt)|(eerht)|(ruof)|(evif)|(xis)|(neves)|(thgie)|(enin)|[0-9]")
                     .find(line.reversed())!!
-                val d2 = when(second.value){
+                val d2 = when (second.value) {
                     "eno" -> "1"
                     "owt" -> "2"
                     "eerht" -> "3"
@@ -45,18 +46,40 @@ class Day01(day: Int, isTest: Boolean) : Day(day, isTest) {
                     "enin" -> "9"
                     else -> second.value
                 }.first()
-                listOf(d1,d2).also { println(it) }
+                listOf(d1, d2)//.also { println(it) }
             }
-            .map {
-                println(it)
-            val list = it.toCharArray()
-                .filter { it.isDigit() }
-            ("" + list.first() + list.last()).also{println(it)}.toLong()
-        }.toList()
+            .map { digits ->
+                //println(digits)
+                val list = digits.toCharArray()
+                    .filter { it.isDigit() }
+                ("" + list.first() + list.last())
+                    //.also { println(digits) }
+                    .toLong()
+            }.toList()
         return digits.sum()
     }
-}
 
+    override fun part2(data: Sequence<String>): Long {
+        return part2_mine(data) // 21ms
+        //return part2_daniela(data) // 7.5ms
+    }
+
+    fun part2_daniela(data: Sequence<String>): Long { // Idea from Daniela Oliveira
+        val values = mapOf(
+            "one" to 1, "two" to 2, "three" to 3, "four" to 4,
+            "five" to 5, "six" to 6, "seven" to 7, "eight" to 8, "nine" to 9,
+            "1" to 1, "2" to 2, "3" to 3, "4" to 4, "5" to 5, "6" to 6, "7" to 7,
+            "8" to 8, "9" to 9
+        )
+        return data.map { line ->
+            val first = values[line.findAnyOf(values.keys)!!.second]
+            val second = values[line.findLastAnyOf(values.keys)!!.second]
+            "$first$second"
+                //.also { println(it) }
+                .toLong()
+        }.sum()
+    }
+}
 fun main() {
     val dayTest = Day01(1, isTest=true)
     //check(dayTest.runPart1() == 142L)
@@ -64,5 +87,6 @@ fun main() {
 
     val day = Day01(1, false)
     //println(day.runPart1())
-    println(day.runPart2())
+    //println(day.runPart2())
+    println(measureTime { day.runPart2() })
 }
