@@ -2,7 +2,9 @@ package day08
 
 import Day
 
-class Day08(day: Int, isTest: Boolean) : Day(day, isTest) {
+class Day08(fileName: String, isTest: Boolean): Day(fileName, isTest) {
+    constructor(day: Int, isTest: Boolean) : this (makeFileName(day, isTest), isTest)
+    
     override fun part1(data: Sequence<String>): Long {
         TODO("Not yet implemented")
     }
@@ -14,10 +16,14 @@ class Day08(day: Int, isTest: Boolean) : Day(day, isTest) {
 
 fun main() {
     val dayTest = Day08(8, isTest=true)
-    check(dayTest.runPart1() == 0L)
-    //check(dayTest.runPart2() == 0L)
+    println("Test part1")
+    check(dayTest.runPart1().also { println("-> $it") } == 8L)
+    //println("Test part2")
+    //check(dayTest.runPart2().also { println("-> $it") } == 2286L)
 
-    val day = Day08(8, false)
-    //println(day.runPart1())
-    //println(day.runPart2())
+    val day = Day08(8, isTest=false)
+    println("Run part1")
+    println(day.runPart1())
+    println("Run part2")
+    println(day.runPart2())
 }

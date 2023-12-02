@@ -26,13 +26,16 @@ class Duplicator {
         val folder = kotlinPath.resolve(pack)
         folder.createDirectory()
         val klass = folder.resolve("$name.kt")
+        val it="\$it"
         klass.writeText(
             """
     package $pack
     
     import Day
     
-    class $name(day: Int, isTest: Boolean) : Day(day, isTest) {
+    class $name(fileName: String, isTest: Boolean): Day(fileName, isTest) {
+        constructor(day: Int, isTest: Boolean) : this (makeFileName(day, isTest), isTest)
+        
         override fun part1(data: Sequence<String>): Long {
             TODO("Not yet implemented")
         }
@@ -44,12 +47,16 @@ class Duplicator {
     
     fun main() {
         val dayTest = $name($day, isTest=true)
-        check(dayTest.runPart1() == 0L)
-        //check(dayTest.runPart2() == 0L)
+        println("Test part1")
+        check(dayTest.runPart1().also { println("-> $it") } == 8L)
+        //println("Test part2")
+        //check(dayTest.runPart2().also { println("-> $it") } == 2286L)
     
-        val day = $name($day, false)
-        //println(day.runPart1())
-        //println(day.runPart2())
+        val day = $name($day, isTest=false)
+        println("Run part1")
+        println(day.runPart1())
+        println("Run part2")
+        println(day.runPart2())
     }
             """.trimIndent()
         )
@@ -58,6 +65,6 @@ class Duplicator {
 
 fun main() {
     val dup = Duplicator()
-    for (day in 1..25)
+    for (day in 4..25)
         dup.create(day)
 }

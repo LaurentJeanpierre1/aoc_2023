@@ -3,7 +3,9 @@ package day01
 import Day
 import kotlin.time.measureTime
 
-class Day01(day: Int, isTest: Boolean) : Day(day, isTest) {
+class Day01(fileName: String, isTest: Boolean): Day(fileName, isTest) {
+    constructor(day: Int, isTest: Boolean) : this (makeFileName(day, isTest), isTest)
+
     override fun part1(data: Sequence<String>): Long {
         val digits = data.map {
             val list = it.toCharArray()
@@ -81,12 +83,18 @@ class Day01(day: Int, isTest: Boolean) : Day(day, isTest) {
     }
 }
 fun main() {
+    println("Test part1")
+    val dayTest1 = Day01("Day01_test1.txt",true)
+    check(dayTest1.runPart1().also { println("-> $it") } == 142L)
+    println("Test part2")
     val dayTest = Day01(1, isTest=true)
-    //check(dayTest.runPart1() == 142L)
-    check(dayTest.runPart2() == 281L)
+    check(dayTest.runPart2().also { println("-> $it") } == 281L)
 
     val day = Day01(1, false)
-    //println(day.runPart1())
-    //println(day.runPart2())
+    println("Run part1")
+    println(day.runPart1())
+    println("Run part2")
+    println(day.runPart2())
+    println("Bench part2")
     println(measureTime { day.runPart2() })
 }

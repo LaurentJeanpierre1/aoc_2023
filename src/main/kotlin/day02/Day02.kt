@@ -2,7 +2,8 @@ package day02
 
 import Day
 
-class Day02(day: Int, isTest: Boolean) : Day(day, isTest) {
+class Day02(fileName: String, isTest: Boolean): Day(fileName, isTest) {
+    constructor(day: Int, isTest: Boolean) : this (makeFileName(day, isTest), isTest)
     override fun part1(data: Sequence<String>): Long {
         var sum = 0L
         for(line in data) {
@@ -21,6 +22,8 @@ class Day02(day: Int, isTest: Boolean) : Day(day, isTest) {
                         "red" -> ok = nb <= 12
                         "green" -> ok = nb <= 13
                     }
+                    if (isTest)
+                        println("$gameId: $nb $color -> $ok")
                 }
             }
             if (ok)
@@ -33,6 +36,9 @@ class Day02(day: Int, isTest: Boolean) : Day(day, isTest) {
         var sum = 0L
         for(line in data) {
             val elts = line.split(":",";")
+            val gameId = elts[0]
+                .drop(5) // remove "Game "
+                .toInt()
             var minB = 0
             var minG = 0
             var minR = 0
@@ -46,6 +52,8 @@ class Day02(day: Int, isTest: Boolean) : Day(day, isTest) {
                         "red" -> if (nb>minR) minR = nb
                         "green" -> if (nb>minG) minG = nb
                     }
+                    if (isTest)
+                        println("$gameId: $nb $color -> $minR $minG $minB")
                 }
             }
             sum += minB.toLong() * minG * minR
@@ -56,10 +64,14 @@ class Day02(day: Int, isTest: Boolean) : Day(day, isTest) {
 
 fun main() {
     val dayTest = Day02(2, isTest=true)
-    //check(dayTest.runPart1() == 8L)
-    check(dayTest.runPart2() == 2286L)
+    println("Test part1")
+    check(dayTest.runPart1().also { println("-> $it") } == 8L)
+    println("Test part2")
+    check(dayTest.runPart2().also { println("-> $it") } == 2286L)
 
     val day = Day02(2, false)
-    //println(day.runPart1())
+    println("Run part1")
+    println(day.runPart1())
+    println("Run part2")
     println(day.runPart2())
 }

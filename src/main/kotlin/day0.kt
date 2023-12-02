@@ -1,8 +1,10 @@
-abstract class Day(private val day: Int, val isTest: Boolean) {
+abstract class Day(private val fileName: String, val isTest: Boolean) {
 
-    protected val fileName = (if (isTest) "Day%02d_test.txt"
-        else
-            "Day%02d.txt").format(day)
+    companion object {
+        fun makeFileName(day: Int, isTest: Boolean): String =
+            (if (isTest) "Day%02d_test.txt" else "Day%02d.txt").format(day)
+    }
+    constructor(day: Int, isTest: Boolean) : this (makeFileName(day, isTest), isTest)
 
     abstract fun part1(data: Sequence<String>): Any
 
