@@ -18,14 +18,14 @@ class Day03(fileName: String, isTest: Boolean): Day(fileName, isTest) {
                     if (isTest) println("${match.value} added because ${line[range.first-1]} < ")
                     continue
                 }
-                if (range.endInclusive != line.lastIndex && line[range.endInclusive+1] != '.') {
+                if (range.last != line.lastIndex && line[range.last+1] != '.') {
                     sum += match.value.toLong()
-                    if (isTest) println("${match.value} added because ${line[range.endInclusive+1]} > ")
+                    if (isTest) println("${match.value} added because ${line[range.last+1]} > ")
                     continue
                 }
                 if (idx != 0) {
                     val prev = lines[idx - 1]
-                    for (i in (range.first-1..range.endInclusive+1).intersect(prev.indices)) {
+                    for (i in (range.first-1..range.last+1).intersect(prev.indices)) {
                         if (prev[i] != '.' && !prev[i].isDigit()) {
                             added = true
                             if (isTest) println("${match.value} added because ${prev[i]} ^[$i] ")
@@ -36,7 +36,7 @@ class Day03(fileName: String, isTest: Boolean): Day(fileName, isTest) {
                 }
                 if (! added && idx != lines.lastIndex) {
                     val next = lines[idx + 1]
-                    for (i in (range.first-1..range.endInclusive+1).intersect(next.indices)) {
+                    for (i in (range.first-1..range.last+1).intersect(next.indices)) {
                         if (next[i] != '.' && !next[i].isDigit()) {
                             if (isTest) println("${match.value} added because ${next[i]} v[$i] ")
                             sum += match.value.toLong()
@@ -48,7 +48,7 @@ class Day03(fileName: String, isTest: Boolean): Day(fileName, isTest) {
         }
         return sum
     }
-    data class Point(val x: Int, val y:Int){}
+    data class Point(val x: Int, val y:Int)
 
     override fun part2(data: Sequence<String>): Long {
         val gears = mutableMapOf<Point, List<Int>>()
@@ -64,14 +64,14 @@ class Day03(fileName: String, isTest: Boolean): Day(fileName, isTest) {
                     if (isTest) println("${match.value} added because ${line[range.first-1]} < ")
                     continue
                 }
-                if (range.endInclusive != line.lastIndex && line[range.endInclusive+1] == '*') {
-                    addGear(idx, gears, range.endInclusive + 1, match.value.toInt())
-                    if (isTest) println("${match.value} added because ${line[range.endInclusive+1]} > ")
+                if (range.last != line.lastIndex && line[range.last+1] == '*') {
+                    addGear(idx, gears, range.last + 1, match.value.toInt())
+                    if (isTest) println("${match.value} added because ${line[range.last+1]} > ")
                     continue
                 }
                 if (idx != 0) {
                     val prev = lines[idx - 1]
-                    for (i in (range.first-1..range.endInclusive+1).intersect(prev.indices)) {
+                    for (i in (range.first-1..range.last+1).intersect(prev.indices)) {
                         if (prev[i] == '*') {
                             added = true
                             if (isTest) println("${match.value} added because ${prev[i]} ^[$i] ")
@@ -82,7 +82,7 @@ class Day03(fileName: String, isTest: Boolean): Day(fileName, isTest) {
                 }
                 if (! added && idx != lines.lastIndex) {
                     val next = lines[idx + 1]
-                    for (i in (range.first-1..range.endInclusive+1).intersect(next.indices)) {
+                    for (i in (range.first-1..range.last+1).intersect(next.indices)) {
                         if (next[i] != '.' && !next[i].isDigit()) {
                             if (isTest) println("${match.value} added because ${next[i]} v[$i] ")
                             addGear(idx+1, gears, i, match.value.toInt())
