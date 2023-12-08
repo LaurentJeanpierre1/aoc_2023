@@ -51,7 +51,7 @@ class Day03(fileName: String, isTest: Boolean): Day(fileName, isTest) {
     data class Point(val x: Int, val y:Int)
 
     override fun part2(data: Sequence<String>): Long {
-        val gears = mutableMapOf<Point, List<Int>>()
+        val gears = mutableMapOf<Point, MutableList<Int>>()
         val lines = data.toList()
         var sum = 0L
         for ((idx,line) in lines.withIndex()) {
@@ -103,14 +103,14 @@ class Day03(fileName: String, isTest: Boolean): Day(fileName, isTest) {
 
     private fun addGear(
         idx: Int,
-        gears: MutableMap<Point, List<Int>>,
+        gears: MutableMap<Point, MutableList<Int>>,
         x: Int,
         value: Int
     ) {
         val p = Point(x, idx)
         gears.compute(p) { _, l ->
             if (l != null) {
-                l.addLast(value)
+                l.add(value)
                 l
             } else {
                 mutableListOf(value)

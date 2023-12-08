@@ -5,7 +5,13 @@ import Day
 class Day08b(fileName: String, isTest: Boolean): Day(fileName, isTest) {
     constructor(day: Int, isTest: Boolean) : this (makeFileName(day, isTest), isTest)
     data class Node(val label : String, val left: String, val right: String)
-    data class Stage(val label : String, val instructionStep: Int)
+    data class Stage(val label : String, val instructionStep: Int) {
+        var timeStep : Long = 0
+
+        override fun toString(): String {
+            return "(l=$label, instr=$instructionStep, step=$timeStep)"
+        }
+    }
     override fun part1(data: Sequence<String>): Long {
         val lines = data.iterator()
         val instructions = lines.next().toList()
@@ -27,6 +33,19 @@ class Day08b(fileName: String, isTest: Boolean): Day(fileName, isTest) {
             if (! current.hasNext()) current = instructions.iterator()
         }
         return steps
+    }
+
+    private fun smallestCommonMutiple (nb1 : Long, nb2: Long) : Long {
+        var n1 : Long
+        var n2 = nb2
+        val product = nb1 * nb2
+        var remains = nb1 % nb2
+        while (remains != 0L) {
+            n1 = n2
+            n2 = remains
+            remains = n1 % n2
+        }
+        return product / n2
     }
 
     override fun part2(data: Sequence<String>): Long {
@@ -57,14 +76,17 @@ class Day08b(fileName: String, isTest: Boolean): Day(fileName, isTest) {
             }
             var path = 0
             for ((place, stage) in here.zip(stages)) {
-                if (! found[path]) {
-                    val currentStage = Stage(place, instructionStep)
+                if (! found[path] || place.last()=='Z') {
+                    val currentStage = Stage(place, instructionStep).apply { this.timeStep = steps }
                     if (stage.contains(currentStage)) {
                         println("Path $path - cycle found at $currentStage with $steps steps")
-                        println(stage.filter { it.label.last()=='Z' })
+                        println(stage.filter { it.label.last() == 'Z' })
                         found[path] = true
                         if (found.all { it })
-                            return 0L
+                            return stages.flatMap{ stageList -> stageList.filter { aStage -> aStage.label.last() == 'Z' }}
+                                .map { stageZ -> stageZ.timeStep }
+                                .sortedDescending() // PPCM needs n1 > n2
+                                .reduce { n1, n2 -> smallestCommonMutiple(n1, n2) }
                     } else {
                         stage.add(currentStage)
                     }
@@ -73,7 +95,7 @@ class Day08b(fileName: String, isTest: Boolean): Day(fileName, isTest) {
             }
             if (! current.hasNext()) {
                 current = instructions.iterator()
-                instructionStep = 0;
+                instructionStep = 0
             }
             /*if (steps and 1023L == 0L)
                 println("$steps : ${stages.map { it.size }} $found")*/
