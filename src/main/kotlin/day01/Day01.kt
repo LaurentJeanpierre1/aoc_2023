@@ -15,6 +15,7 @@ class Day01(fileName: String, isTest: Boolean): Day(fileName, isTest) {
         return digits.sum()
     }
 
+
     //nineninesixskjkbhx6nineoneightj ---> attention au eigth final
     /*override*/ fun part2_mine(data: Sequence<String>): Long {
         val digits = data
