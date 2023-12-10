@@ -24,4 +24,5 @@ abstract class Day(private val fileName: String, val isTest: Boolean) {
     /** Extract String from ressource file */
     fun readText(fileName: String) = object {}.javaClass.getResource(fileName)!!.readText()
 
+
 }
