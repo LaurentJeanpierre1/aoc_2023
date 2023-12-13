@@ -12,18 +12,20 @@ class Day13(fileName: String, isTest: Boolean): Day(fileName, isTest) {
         return 0L
     }
     override fun runPart1() : Any {
-        val patterns = readText(fileName).split("\r\n\r\n")
-        return patterns.map { val lines = it.lines()
-            findHorizontal(lines).also { println("H:$it") } * 100L + findVertical(lines).also { println("V:$it\n") } }.sum()
+        val patterns = readText(fileName).split("\n\n")
+        return patterns.sumOf { pattern ->
+            val lines = pattern.lines()
+            findHorizontal(lines).also { println("H:$it") } * 100L + findVertical(lines).also { println("V:$it\n") }
+        }
     }
     override fun runPart2() : Any {
-        val patterns = readText(fileName).split("\r\n\r\n")
-        return patterns.map {
-            val lines = it.lines().toMutableList()
+        val patterns = readText(fileName).split("${System.lineSeparator()}${System.lineSeparator()}").filter { it.isNotBlank() }
+        return patterns.sumOf { pattern ->
+            val lines = pattern.lines().toMutableList()
             val h = findHorizontal(lines).also { println("\nwas H:$it") }
             val v = findVertical(lines).also { println("was V:$it") }
             fixMirror(lines, h, v)
-        }.sum()
+        }
     }
 
     private fun fixMirror(lines: MutableList<String>, h: Long, v: Long): Long {
@@ -33,23 +35,22 @@ class Day13(fileName: String, isTest: Boolean): Day(fileName, isTest) {
                 val c = line[x]
                 val newLine = line.replaceRange(x..x, if (c == '.') "#" else ".")
                 lines[y] = newLine
-                val h2 = findHorizontal(lines)
-                val v2 = findVertical(lines)
-                if (h2 != 0L || v2 != 0L)
-                    if (h2 != h) {
-                        println("Fix col $x in $line -> H2=$h2")
-                        return h2 * 100L
-                    } else if (v2 != v) {
-                        println("Fix col $x in $line -> V2=$v2")
-                        return v2
-                    }
+                val h2 = findHorizontal(lines, h)
+                val v2 = findVertical(lines, v)
+                if (h2 != h && h2 != 0L) {
+                    println("Fix col $x in $line -> H2=$h2")
+                    return h2 * 100L
+                } else if (v2 != v && v2 != 0L) {
+                    println("Fix col $x in $line -> V2=$v2")
+                    return v2
+                }
                 lines[y] = line
             }
         }
         return Long.MAX_VALUE
     }
 
-    private fun findHorizontal(lines: List<String>): Long{
+    private fun findHorizontal(lines: List<String>, but: Long=-1): Long{
         for (i in 0..<lines.lastIndex) {
             val j = i + 1
             if (lines[j] == lines[i]) {
@@ -68,7 +69,11 @@ class Day13(fileName: String, isTest: Boolean): Day(fileName, isTest) {
                             break
                         }
                 }
-                if (ok) return 1 + mirror / 2L
+                if (ok) {
+                    val res = 1 + mirror / 2L
+                    if (res != but)
+                        return res
+                }
             }
         }
         return 0L
@@ -76,7 +81,7 @@ class Day13(fileName: String, isTest: Boolean): Day(fileName, isTest) {
     private fun colEqual(pattern: List<String>, col1: Int, col2: Int):Boolean {
         return pattern.all { line-> line[col1] == line[col2] }
     }
-    private fun findVertical(lines: List<String>): Long {
+    private fun findVertical(lines: List<String>, but: Long=-1): Long {
         val width = lines.first().indices
         for (i in 0..< width.last) {
             val j = i + 1
@@ -96,7 +101,11 @@ class Day13(fileName: String, isTest: Boolean): Day(fileName, isTest) {
                             break
                         }
                 }
-                if (ok) return 1 + mirror / 2L
+                if (ok){
+                    val res = 1 + mirror / 2L
+                    if (res != but)
+                        return res
+                }
             }
         }
         return 0L
@@ -106,14 +115,14 @@ class Day13(fileName: String, isTest: Boolean): Day(fileName, isTest) {
 fun main() {
     //val dayTest = Day13("Day13_test2.txt", isTest=true)
     val dayTest = Day13(13, isTest=true)
-    //println("Test part1")
-    //check(dayTest.runPart1().also { println("-> $it") } == 405L)
+    println("Test part1")
+    check(dayTest.runPart1().also { println("-> $it") } == 405L)
     println("Test part2")
     check(dayTest.runPart2().also { println("-> $it") } == 400L)
 
     val day = Day13(13, isTest=false)
-    //println("Run part1")
-    //println(day.runPart1())
+    println("Run part1")
+    println(day.runPart1())
     println("Run part2")
     println(day.runPart2())
 }
