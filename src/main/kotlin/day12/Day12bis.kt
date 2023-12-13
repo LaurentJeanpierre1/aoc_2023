@@ -4,21 +4,23 @@ import Day
 import java.util.StringJoiner
 import kotlin.streams.asStream
 
-class Day12bis(fileName: String, isTest: Boolean): Day(fileName, isTest) {
+/** Variant of Day12 with additional cut check if groups are too large and parallel processing of lines */
+open class Day12bis(fileName: String, isTest: Boolean): Day(fileName, isTest) {
     constructor(day: Int, isTest: Boolean) : this (makeFileName(day, isTest), isTest)
     
     override fun part1(data: Sequence<String>): Long {
-        return data.sumOf {line->
-            val parts = line.split(' ').filter { it.isNotBlank() }
-            val unk = parts[0]
-            val packets = parts[1].split(',').filter { it.isNotBlank() }.map{it.toInt()}
-
-            //nbArangements(unk, packets, 0, 0, packets.sum()+packets.size-1)
-            nbArangementsRec(unk, packets).also { if (isTest) println(it) }
-        }
+        return data.sumOf {line-> processPart1(line) }
     }
 
-    private fun recurse(unk: String, idxUnk: Int, packets: List<Int>, idxPacket: Int,
+    protected fun processPart1(line: String) : Long {
+        val parts = line.split(' ').filter { it.isNotBlank() }
+        val unk = parts[0]
+        val packets = parts[1].split(',').filter { it.isNotBlank() }.map { it.toInt() }
+
+        return nbArangementsRec(unk, packets).also { if (isTest) println(it) }
+    }
+
+    protected open fun recurse(unk: String, idxUnk: Int, packets: List<Int>, idxPacket: Int,
                         inPacket: Boolean, count: Int, nbOK: Int, nbKO:Int): Long{
         if (idxPacket >= packets.size) return 1L // success if packet list is drained
 
@@ -80,18 +82,21 @@ class Day12bis(fileName: String, isTest: Boolean): Day(fileName, isTest) {
 
     override fun part2(data: Sequence<String>): Long {
         return data.withIndex().asStream().parallel().mapToLong{(idx,line)->
-            val parts = line.split(' ').filter { it.isNotBlank() }
-            val unk = parts[0]
-            val packets = parts[1].split(',').filter { it.isNotBlank() }.map{it.toInt()}
-
-            val unk2 = StringJoiner("?")
-            val packs2 = mutableListOf<Int>()
-            repeat(5) {
-                unk2.add(unk)
-                packs2.addAll(packets)
-            }
-            nbArangementsRec(unk2.toString(), packs2).also { /*if (isTest)*/ println("$idx : $it") }
+            processPart2(line).also { /*if (isTest)*/ println("$idx : $it") }
         }.sum()
+    }
+    protected fun processPart2(line : String) : Long {
+        val parts = line.split(' ').filter { it.isNotBlank() }
+        val unk = parts[0]
+        val packets = parts[1].split(',').filter { it.isNotBlank() }.map{it.toInt()}
+
+        val unk2 = StringJoiner("?")
+        val packs2 = mutableListOf<Int>()
+        repeat(5) {
+            unk2.add(unk)
+            packs2.addAll(packets)
+        }
+        return nbArangementsRec(unk2.toString(), packs2)
     }
 }
 
