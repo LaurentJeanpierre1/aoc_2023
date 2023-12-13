@@ -1,4 +1,4 @@
-abstract class Day(private val fileName: String, val isTest: Boolean) {
+abstract class Day(val fileName: String, val isTest: Boolean) {
 
     companion object {
         fun makeFileName(day: Int, isTest: Boolean): String =
