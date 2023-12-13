@@ -2,8 +2,9 @@ package day12
 
 import Day
 import java.util.StringJoiner
+import kotlin.streams.asStream
 
-class Day12(fileName: String, isTest: Boolean): Day(fileName, isTest) {
+class Day12bis(fileName: String, isTest: Boolean): Day(fileName, isTest) {
     constructor(day: Int, isTest: Boolean) : this (makeFileName(day, isTest), isTest)
     
     override fun part1(data: Sequence<String>): Long {
@@ -16,43 +17,7 @@ class Day12(fileName: String, isTest: Boolean): Day(fileName, isTest) {
             nbArangementsRec(unk, packets).also { if (isTest) println(it) }
         }
     }
-    class Process {
-        val packets = mutableListOf<Int>()
-        private var inPacket = false
-        private var count = 0
-        var nbOK = 0
-        var nbKO = 0
-        fun process(elt: Char, delta : Int) {
-            if (elt == '.') {
-                nbOK-=delta
-                if (inPacket) {
-                    packets.add(count)
-                    count = 0
-                    inPacket = false
-                }
-            } else {
-                nbKO-=delta
-                inPacket = true
-                count++
-            }
-        }
-        fun copy() : Process {
-            val other = Process()
-            other.packets.addAll(packets)
-            other.inPacket = inPacket
-            other.count = count
-            other.nbKO = nbKO
-            other.nbOK = nbOK
-            return other
-        }
-        fun end(){
-            if (inPacket) {
-                packets.add(count)
-                inPacket = false
-                count = 0
-            }
-        }
-    }
+
     private fun recurse(unk: String, idxUnk: Int, packets: List<Int>, idxPacket: Int,
                         inPacket: Boolean, count: Int, nbOK: Int, nbKO:Int): Long{
         if (idxPacket >= packets.size) return 1L // success if packet list is drained
@@ -99,7 +64,8 @@ class Day12(fileName: String, isTest: Boolean): Day(fileName, isTest) {
         }
         if (nbKO>0) { // test '#'
             if (nextInPacket || nextPacket<packets.size ) // if in packet or can begin a new packet
-                sum += recurse(unk, next+1, packets, nextPacket, true, nextCount+1, nbOK, nbKO - 1)
+                if (packets[nextPacket] > nextCount)
+                    sum += recurse(unk, next+1, packets, nextPacket, true, nextCount+1, nbOK, nbKO - 1)
         }
         return sum
     }
@@ -111,34 +77,9 @@ class Day12(fileName: String, isTest: Boolean): Day(fileName, isTest) {
         nbKO -= unk.count { it == '#' }
         return recurse(unk, 0, packets, 0, false, 0, nbOK, nbKO)
     }
-    fun nbArangements(unk: String, packets:List<Int>) : Long{ //Fails even with 20Go RAM in part2
-        var procs = mutableListOf(Process().apply {
-            nbKO = packets.sum()
-            nbOK = unk.length - nbKO
-            // remove fixed ones
-            nbOK -= unk.count { it=='.' }
-            nbKO -= unk.count { it=='#' }
-        })
-        for (elt in unk) {
-            if (elt == '?') {
-                val copy = procs.map { it.copy().apply { process('#', 1) } }
-                procs.forEach{ it.process('.', 1) }
-                procs.addAll(copy)
-            } else
-                procs.forEach{ it.process(elt, 0) } // fixed ones are already counted
-            procs = procs.asSequence().filter { it.nbOK>=0 && it.nbKO>=0 }.filter {
-                it.packets.zip(packets).all { (a,b) -> a==b }
-            }.toMutableList()
-        }
-        procs.forEach{ it.end() }
-        return procs.count { it.packets == packets }.toLong()
-    }
-//    fun nbArangements(unk: String, packets:List<Int>, idxUnk : Int, idxPackets: Int, remaining: Int): Long {
-//        if (idxUnk >= unk.length)
-//    }
-//
+
     override fun part2(data: Sequence<String>): Long {
-        return data.sumOf {line->
+        return data.withIndex().asStream().parallel().mapToLong{(idx,line)->
             val parts = line.split(' ').filter { it.isNotBlank() }
             val unk = parts[0]
             val packets = parts[1].split(',').filter { it.isNotBlank() }.map{it.toInt()}
@@ -149,21 +90,22 @@ class Day12(fileName: String, isTest: Boolean): Day(fileName, isTest) {
                 unk2.add(unk)
                 packs2.addAll(packets)
             }
-            nbArangementsRec(unk2.toString(), packs2).also { /*if (isTest)*/ println(it) }
-        }
+            nbArangementsRec(unk2.toString(), packs2).also { /*if (isTest)*/ println("$idx : $it") }
+        }.sum()
     }
 }
 
 fun main() {
-    val dayTest = Day12(12, isTest=true)
-    println("Test part1")
-    check(dayTest.runPart1().also { println("-> $it") } == 21L)
+    val dayTest = Day12bis(12, isTest=true)
+    //val dayTest = Day12bis("Day12_test2.txt", isTest=true)
+    //println("Test part1")
+    //check(dayTest.runPart1().also { println("-> $it") } == 21L)
     println("Test part2")
     check(dayTest.runPart2().also { println("-> $it") } == 525152L)
 
-    val day = Day12(12, isTest=false)
-    println("Run part1")
-    println(day.runPart1())
+    val day = Day12bis(12, isTest=false)
+//    println("Run part1")
+//    println(day.runPart1())
     println("Run part2")
     println(day.runPart2())
 }
