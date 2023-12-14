@@ -1,10 +1,11 @@
 package day14
 
 import Day
+import java.util.BitSet
 
 private const val VALUE = (1024*1024)-1
 
-class Day14(fileName: String, isTest: Boolean): Day(fileName, isTest) {
+class Day14b(fileName: String, isTest: Boolean): Day(fileName, isTest) {
     constructor(day: Int, isTest: Boolean) : this (makeFileName(day, isTest), isTest)
     
     override fun part1(data: Sequence<String>): Long {
@@ -81,27 +82,43 @@ class Day14(fileName: String, isTest: Boolean): Day(fileName, isTest) {
     }
     override fun part2(data: Sequence<String>): Long {
         val platform = data.map { line -> line.toCharArray() }.toList()
-        //val copies = mutableListOf<List<CharArray>>()
+        val copies = mutableListOf<BitSet>()
+        val realCopies = mutableListOf<List<CharArray>>()
         var cpt = 1
-        for(it in 0..<1000000000) {
-//            val copy = platform.map { line->line.clone() }
-//            copies.add(copy)
+        var ultimate = BitSet()
+        val lineSize = platform.first().size
+        for(cycle in 0..<1000000000) {
             rollNorth(platform)
             rollWest(platform)
             rollSouth(platform)
             rollEast(platform)
-            if((it and VALUE == VALUE)){
+            if((cycle and VALUE == VALUE)){
                 println("After $cpt cycle(s):")
                 cpt++
-                //platform.forEach { println(it) }
-//                val indexOfCopy = copies.indexOf(platform)
-//                if (indexOfCopy != -1) {
-//                    println("Stability achieved $indexOfCopy == $it")
-//                    break
-//                }
+                //platform.forEach { println(cycle) }
             }
+            val copy = platform.joinToString(separator = "") { it.joinToString("") }
+            val bitSet = BitSet(platform.size* lineSize)
+            copy.forEachIndexed { index, c -> if (c=='O') bitSet.set(index) }
+
+            realCopies.add(platform.map { it.clone() })
+            val indexOfCopy = copies.indexOf(bitSet)
+            if (indexOfCopy != -1) {
+                println("Stability achieved $indexOfCopy == $cycle")
+                val rem = (999_999_999L-indexOfCopy) % (cycle-indexOfCopy)
+                ultimate = copies[rem.toInt()+indexOfCopy]
+                if (isTest) realCopies[rem.toInt()+indexOfCopy].forEach { println(it) }
+                println()
+                break
+            } else
+                copies.add(bitSet)
         }
 
+        cpt=0
+        platform.forEach { line ->
+            line.forEachIndexed { index, _ -> line[index] = if (ultimate[cpt++]) 'O' else '.' }
+            println(line)
+        }
         return platform.mapIndexed{ no,line ->
             (platform.size-no)*line.count { it=='O' }.toLong()
         }.sum()
@@ -109,13 +126,13 @@ class Day14(fileName: String, isTest: Boolean): Day(fileName, isTest) {
 }
 
 fun main() {
-    val dayTest = Day14(14, isTest=true)
+    val dayTest = Day14b(14, isTest=true)
 //    println("Test part1")
 //    check(dayTest.runPart1().also { println("-> $it") } == 136L)
     println("Test part2")
     check(dayTest.runPart2().also { println("-> $it") } == 64L)
 
-    val day = Day14(14, isTest=false)
+    val day = Day14b(14, isTest=false)
     println("Run part1")
     println(day.runPart1())
     println("Run part2")
