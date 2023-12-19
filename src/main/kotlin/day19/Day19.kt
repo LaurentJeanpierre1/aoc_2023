@@ -5,9 +5,10 @@ import java.util.function.Predicate
 
 class Day19(fileName: String, isTest: Boolean): Day(fileName, isTest) {
     constructor(day: Int, isTest: Boolean) : this (makeFileName(day, isTest), isTest)
-    private val EMPTY_RANGE = 0..<0
-    private val FULL_RANGE = 1..4000
-
+    companion object {
+        private val EMPTY_RANGE = 0..<0
+        private val FULL_RANGE = 1..4000
+    }
     data class Item(val x: Int, val m: Int, val a:Int, val s:Int)
     data class Rule(val condition: Predicate<Item>, val destination: String)
     override fun part1(data: Sequence<String>): Long {
@@ -24,7 +25,7 @@ class Day19(fileName: String, isTest: Boolean): Day(fileName, isTest) {
                 if (spec.size==1) {
                     Rule( {true}, first)
                 } else {
-                    val carac = first[0]
+                    val param = first[0]
                     val op = when(first[1]) {
                         '<' -> -1
                         '>' -> +1
@@ -32,29 +33,28 @@ class Day19(fileName: String, isTest: Boolean): Day(fileName, isTest) {
                         else -> throw IllegalArgumentException("condition $rule")
                     }
                     val value = first.substring(2).toInt()
-                    when(carac){
+                    when(param){
                         'x' -> Rule( {i:Item->i.x.compareTo(value) == op}, spec[1])
                         'm' -> Rule( {i:Item->i.m.compareTo(value) == op}, spec[1])
                         'a' -> Rule( {i:Item->i.a.compareTo(value) == op}, spec[1])
                         's' -> Rule( {i:Item->i.s.compareTo(value) == op}, spec[1])
-                        else-> throw IllegalArgumentException("Unknown variable $carac in $rule")
+                        else-> throw IllegalArgumentException("Unknown variable $param in $rule")
                     }
                 }
             }
             workflows[name] = rules
         }
         val items = mutableListOf<Item>()
-        iterator.forEachRemaining() { line->
-            val carac = line.split('{',',','}').filter { it.isNotBlank() }.map{it.drop(2)}.map { it.toInt() }
-            items += Item(carac[0], carac[1], carac[2], carac[3])
+        iterator.forEachRemaining { line->
+            val param = line.split('{',',','}').filter { it.isNotBlank() }.map{it.drop(2)}.map { it.toInt() }
+            items += Item(param[0], param[1], param[2], param[3])
         }
 
         return items.sumOf { item->
             var stage = "in"
             if (isTest) print("$item -> in ")
             while(stage != "A" && stage != "R") {
-                val list = workflows[stage]
-                if (list == null) throw IllegalArgumentException("No workflow $stage")
+                val list = workflows[stage] ?: throw IllegalArgumentException("No workflow $stage")
                 for(rule in list)
                     if (rule.condition.test(item)) {
                         stage = rule.destination
@@ -87,10 +87,10 @@ class Day19(fileName: String, isTest: Boolean): Day(fileName, isTest) {
                 if (spec.size==1) {
                     Rule2( emptyMap(), first)
                 } else {
-                    val carac = first[0]
+                    val param = first[0]
                     val op = first[1]
                     val value = first.substring(2).toInt()
-                    Rule2( mapOf(carac to (op to value)), spec[1])
+                    Rule2( mapOf(param to (op to value)), spec[1])
                 }
             }
             workflows[name] = rules
@@ -101,25 +101,87 @@ class Day19(fileName: String, isTest: Boolean): Day(fileName, isTest) {
             }
         }
         val item = mapOf('x' to FULL_RANGE, 'm' to FULL_RANGE, 'a' to FULL_RANGE, 's' to FULL_RANGE)
-        val accepted = getAccepted("in", item)
-        return accepted.sumOf { it.map { (carac, range) -> range.last+1-range.first }. fold(1L) { prod, size-> prod*size } }
+        return getAccepted("in", item)
     }
-    private fun getAccepted(workflow: String, item: Map<Char, IntRange>) :  List<Map<Char, IntRange>> {
-        if (workflow == "A") return listOf(mapOf('x' to FULL_RANGE, 'm' to FULL_RANGE, 'a' to FULL_RANGE, 's' to FULL_RANGE))
-        if (workflow == "R") return emptyList()
-        if (accept.containsKey(workflow)) return accept[workflow]!!
+    private fun getAccepted(workflow: String, item: Map<Char, IntRange>) :  Long {
+        if (workflow == "A") return item.map { (_, r: IntRange) -> r.last - r.first + 1L }.fold(1L) { acc, size -> acc * size }
+        if (workflow == "R") return 0L
+
         val list = workflows[workflow]!!
-        var accepted = mutableListOf<Map<Char, IntRange>>()
+        var accepted = 0L
         var current = item
         for (rule in list) {
             if (rule.condition.isEmpty())
-                if (rule.destination == "A") return merge(accepted, current)
-                else return accepted
+                accepted += getAccepted(rule.destination, current)
             else {
-
+                val (selected, refused) = applyCondition(rule.condition, current)
+                if (selected.isNotEmpty())
+                    accepted += getAccepted(rule.destination, selected)
+                if (refused.isEmpty())
+                    break
+                else
+                    current = refused
             }
         }
+        return accepted
     }
+
+    private fun applyCondition(condition: Map<Char, Pair<Char, Int>>, item: Map<Char, IntRange>) :
+            Pair<Map<Char, IntRange>, Map<Char, IntRange>> {
+        val selected = mutableMapOf<Char, IntRange>()
+        val refused = mutableMapOf<Char, IntRange>()
+
+        for( (param, limit) in condition ) {
+            val current = item[param]!!
+            val bound = limit.second
+            when (limit.first) {
+                '<' -> {
+                    if (bound <= current.first ) {
+                        selected[param] = EMPTY_RANGE
+                        refused[param] = current
+                    } else if (bound > current.last) {
+                        selected[param] = current
+                        refused[param] = EMPTY_RANGE
+                    } else {
+                        selected[param] = current.first ..< bound
+                        refused[param] = bound .. current.last
+                    }
+                }
+                '>' -> {
+                    if (bound < current.first ) {
+                        selected[param] = current
+                        refused[param] = EMPTY_RANGE
+                    } else if (bound >= current.last) {
+                        selected[param] = EMPTY_RANGE
+                        refused[param] = current
+                    } else {
+                        selected[param] = bound+1 .. current.last
+                        refused[param] = current.first .. bound
+                    }
+                }
+                else -> throw IllegalStateException()
+            }
+        }
+        if (selected.values.contains(EMPTY_RANGE)) {
+            selected.clear()
+        } else {
+            for ( (c,r) in item ) {
+                if (!selected.containsKey(c))
+                    selected[c] = r
+            }
+        }
+        if (refused.values.contains(EMPTY_RANGE)) {
+            refused.clear()
+        } else {
+            for ( (c,r) in item ) {
+                if (!refused.containsKey(c))
+                    refused[c] = r
+            }
+        }
+        return Pair(selected, refused)
+    }
+
+
 }
 
 

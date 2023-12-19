@@ -6,9 +6,9 @@ import kotlin.io.path.createFile
 import kotlin.io.path.writeText
 
 class Duplicator {
-    val path = ("/Users/Jeanpierre/IdeaProjects/AoC2023/src/main")
-    val kotlinPath = Path.of(path, "kotlin")
-    val resPath = Path.of(path, "resources")
+    private val path = ("/Users/Jeanpierre/IdeaProjects/AoC2023/src/main")
+    private val kotlinPath: Path = Path.of(path, "kotlin")
+    private val resPath: Path = Path.of(path, "resources")
 
     fun create(day: Int) {
         val name = "Day%02d".format(day)
