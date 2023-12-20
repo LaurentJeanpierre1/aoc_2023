@@ -2,8 +2,8 @@ package day20
 
 import Day
 
-class Day20(fileName: String, isTest: Boolean): Day(fileName, isTest) {
-    constructor(day: Int, isTest: Boolean) : this (makeFileName(day, isTest), isTest)
+class Day20SemiManual(fileName: String, isTest: Boolean, private val targetModule: String): Day(fileName, isTest) {
+    constructor(day: Int, isTest: Boolean, targetModule: String) : this (makeFileName(day, isTest), isTest, targetModule)
 
     data class Pulse(val from: Gate, val to: Gate, val value:Boolean)
     private val gates = mutableMapOf<String,Gate>()
@@ -23,6 +23,14 @@ class Day20(fileName: String, isTest: Boolean): Day(fileName, isTest) {
         open fun newInput(from: Gate) {}
         open fun process(high: Boolean, from: Gate) {
             if (isTest) println("$name processes $high")
+        }
+
+        open fun removeDestinations(toDrop: MutableSet<Gate>) {
+            destinations.removeAll(toDrop)
+        }
+
+        override fun toString(): String {
+            return name
         }
     }
     inner class FlipFlop(name: String) : Gate(name) {
@@ -47,6 +55,11 @@ class Day20(fileName: String, isTest: Boolean): Day(fileName, isTest) {
             state[from] = high
             send (! state.all{ it.value })
         }
+
+        override fun removeDestinations(toDrop: MutableSet<Gate>) {
+            super.removeDestinations(toDrop)
+            toDrop.forEach { state.remove(it) }
+        }
     }
 
     inner class Broadcast(name: String) : Gate(name) {
@@ -56,26 +69,6 @@ class Day20(fileName: String, isTest: Boolean): Day(fileName, isTest) {
         }
     }
     inner class Output(name: String) : Gate(name)
-
-    override fun part1(data: Sequence<String>): Long {
-        readGates(data)
-
-        queue.clear()
-        var nbHigh = 0L
-        var nbLow = 0L
-        repeat(1000) {
-            queue.addLast(Pulse(broadcaster, broadcaster, false))
-            while(queue.isNotEmpty()) {
-                val pulse = queue.removeFirst()
-                if (pulse.value)
-                    nbHigh++
-                else
-                    nbLow++
-                pulse.to.process(pulse.value, pulse.from)
-            }
-        }
-        return nbHigh * nbLow
-    }
 
     private fun readGates(data: Sequence<String>) {
         data.forEach { line ->
@@ -96,13 +89,17 @@ class Day20(fileName: String, isTest: Boolean): Day(fileName, isTest) {
             }
         }
         forwardConnexions.forEach { (from, to) ->
-            var gate = gates[to]
+                var gate = gates[to]
             if (gate == null) {
                 gate = Output(to)
                 gates[to] = gate
             }
             from.connect(gate)
         }
+    }
+
+    override fun part1(data: Sequence<String>): Any {
+        TODO("See Day20.kt")
     }
 
     override fun part2(data: Sequence<String>): Long {
@@ -116,30 +113,28 @@ class Day20(fileName: String, isTest: Boolean): Day(fileName, isTest) {
             queue.addLast(Pulse(broadcaster, broadcaster, false))
             while(queue.isNotEmpty()) {
                 val pulse = queue.removeFirst()
-                if (pulse.to.name == "rx") {
+                if (pulse.to.name == targetModule) {
                     if (! pulse.value) {
                         nbToRx++
-                        println("Low Pulse to rx at $count")
-                    } else
-                        println("High Pulse to rx at $count")
+                        println("Low Pulse to $targetModule at $count")
+                    } /*else
+                        println("High Pulse to $targetModule at $count")*/
                 }
                 pulse.to.process(pulse.value, pulse.from)
             }
         } while (nbToRx != 1L)
         return count
     }
+
 }
 
 fun main() {
-    val dayTest = Day20(20, isTest=true)
-    println("Test part1")
-    check(dayTest.runPart1().also { println("-> $it") } == 32000000L)
-    //println("Test part2")
-    //check(dayTest.runPart2().also { println("-> $it") } == 2286L)
-
-    val day = Day20(20, isTest=false)
-    println("Run part1")
-    println(day.runPart1())
-    println("Run part2")
-    println(day.runPart2())
+    for (target in listOf("mp", "fz", "hn", "xf")) {
+        //thread(start = true, name = "Thread-$target") {
+            val dayBranch = Day20SemiManual(20, isTest = false, target)
+            println("Run part2 for $target")
+            println("$target : ${dayBranch.runPart2()}")
+        //}
+    }
+    println(" Now compute PPCM of all these... Thanks LibreOffice")
 }

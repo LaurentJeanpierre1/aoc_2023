@@ -1,8 +1,9 @@
 package day20
 
 import Day
+import java.io.File
 
-class Day20(fileName: String, isTest: Boolean): Day(fileName, isTest) {
+class Day20Manual(fileName: String, isTest: Boolean): Day(fileName, isTest) {
     constructor(day: Int, isTest: Boolean) : this (makeFileName(day, isTest), isTest)
 
     data class Pulse(val from: Gate, val to: Gate, val value:Boolean)
@@ -12,11 +13,13 @@ class Day20(fileName: String, isTest: Boolean): Day(fileName, isTest) {
     private lateinit var broadcaster : Broadcast
     open inner class Gate(val name: String) {
         private val destinations = mutableListOf<Gate>()
+        var lastState : Boolean = false
         fun connect(next : Gate) {
             destinations += next
             next.newInput(this)
         }
         fun send(high: Boolean) {
+            lastState = high
             if (isTest) println("  $name -> sends $high to ${destinations.joinToString { it.name }}")
             destinations.forEach { queue.addLast( Pulse(this, it, high) ) }
         }
@@ -110,6 +113,9 @@ class Day20(fileName: String, isTest: Boolean): Day(fileName, isTest) {
 
         queue.clear()
         var count = 0L
+        val writer = File("gates.csv").printWriter()
+        writer.print("0,")
+        writer.println(gates.map { it.key }.joinToString())
         do {
             count++
             var nbToRx = 0L
@@ -120,26 +126,29 @@ class Day20(fileName: String, isTest: Boolean): Day(fileName, isTest) {
                     if (! pulse.value) {
                         nbToRx++
                         println("Low Pulse to rx at $count")
-                    } else
-                        println("High Pulse to rx at $count")
+                    }/* else
+                        println("High Pulse to rx at $count")*/
                 }
                 pulse.to.process(pulse.value, pulse.from)
             }
+            writer.print("$count,")
+            writer.println(gates.map { if (it.value.lastState) "1" else "0" }.joinToString())
+            writer.flush()
         } while (nbToRx != 1L)
         return count
     }
 }
 
 fun main() {
-    val dayTest = Day20(20, isTest=true)
-    println("Test part1")
-    check(dayTest.runPart1().also { println("-> $it") } == 32000000L)
+//    val dayTest = Day20(20, isTest=true)
+//    println("Test part1")
+//    check(dayTest.runPart1().also { println("-> $it") } == 32000000L)
     //println("Test part2")
     //check(dayTest.runPart2().also { println("-> $it") } == 2286L)
 
-    val day = Day20(20, isTest=false)
-    println("Run part1")
-    println(day.runPart1())
+    val day = Day20Manual(20, isTest=false)
+//    println("Run part1")
+//    println(day.runPart1())
     println("Run part2")
     println(day.runPart2())
 }
