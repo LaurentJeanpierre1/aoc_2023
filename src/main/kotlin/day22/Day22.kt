@@ -65,11 +65,11 @@ class Day22(fileName: String, isTest: Boolean): Day(fileName, isTest) {
                 for (x in brick.x0..brick.x1) {
                     val brickLaid = heights[y][x]
                     if (brickLaid != null) {
-                        if (zMin < brickLaid.z0) {
-                            zMin = brickLaid.z0
+                        if (zMin < brickLaid.z1) {
+                            zMin = brickLaid.z1
                             on.clear()
                             on += brickLaid
-                        } else if (zMin == brickLaid.z0) {
+                        } else if (zMin == brickLaid.z1) {
                             on += brickLaid
                         }
                     }
@@ -94,38 +94,26 @@ class Day22(fileName: String, isTest: Boolean): Day(fileName, isTest) {
         var sum = 0L
         for ((b,above) in over) {
             if (above.isNotEmpty() && b !in freeBricks) {
-                sum += nbFalling2(mutableListOf(b),b).also{
+                val removed = mutableListOf(b)
+                sum += nbFalling(removed,b).also{
                     if (isTest) println("Removing $b makes $it falling")
-                }
+                } - 1 // b is counted in nbFalling2
             }
         }
         return sum
     }
 
-    private fun nbFalling(removed: MutableList<Brick>): Long {
-        return under.map { (b, below) ->
-            if (b.z0 == 1 || b in removed) // on ground or already removed -> not falling
-                0L
-            else {
-                if (below.all { it in removed }) { // brick over nothing -> falling
-                    removed.add(b)
-                    val cascade = nbFalling(removed)
-                    1L + cascade
-                } else
-                    0L
-            }
-        }.sum()
-    }
-
-    private fun nbFalling2(removed: MutableList<Brick>, falling: Brick): Long {
-        val justRemoved = mutableListOf<Brick>()
+    private fun nbFalling(removed: MutableList<Brick>, falling: Brick): Long {
+        val justRemoved = mutableSetOf<Brick>()
         over[falling]!!.forEach { above ->
             if (above !in removed && under[above]!!.all {it in removed} ) {
                 removed += above
                 justRemoved += above
             }
         }
-        return 1+justRemoved.sumOf { nbFalling2(removed, it) }
+        val cascade = justRemoved.sumOf { nbFalling(removed, it) }
+        if (isTest) println("Falling $falling brings down $cascade other blocks")
+        return 1+cascade
     }
 }
 
@@ -140,5 +128,5 @@ fun main() {
     println("Run part1")
     println(day.runPart1())
     println("Run part2")
-    println(day.runPart2()) //58510 too low
+    println(day.runPart2()) //58510 too low → because z0 instead of z1 in updating heights :'(
 }
