@@ -6,20 +6,74 @@ class Day23(fileName: String, isTest: Boolean): Day(fileName, isTest) {
     constructor(day: Int, isTest: Boolean) : this (makeFileName(day, isTest), isTest)
     
     override fun part1(data: Sequence<String>): Long {
-        TODO("Not yet implemented")
+        val map = data.map { it.toCharArray() }.toList()
+        return longest(map, 1 to 1, mutableSetOf(1 to 0), 0L, true)
+    }
+
+    private fun longest(
+        map: List<CharArray>,
+        position: Pair<Int, Int>,
+        visited: MutableSet<Pair<Int, Int>>,
+        soFar: Long,
+        slippy: Boolean
+    ): Long {
+        var (x,y) = position
+        if (y == map.lastIndex) return soFar + 1
+        var dist = soFar + 1
+        val leg = mutableSetOf(position)
+        visited += position
+        val next = mutableSetOf<Pair<Int, Int>>()
+        do {
+            next.clear()
+            if (y == map.lastIndex) {
+                visited.removeAll(leg)
+                return dist
+            }
+            val tile = if (slippy) map[y][x] else '.'
+            if (tile != 'v') addDirection(x + 1, y, visited, map, next)
+            if (tile == '.') addDirection(x - 1, y, visited, map, next)
+            if (tile == '.') addDirection(x, y - 1, visited, map, next)
+            if (tile != '>') addDirection(x, y + 1, visited, map, next)
+            if (next.size == 1) {
+                dist++
+                val nextPos = next.first()
+                visited.add(nextPos)
+                leg.add(nextPos)
+                x = nextPos.first
+                y = nextPos.second
+            }
+        } while (next.size == 1)
+        var max = 0L
+        for (nextPos in next) {
+            val nextLen = longest(map, nextPos, visited, dist, slippy)
+            if (nextLen>max) max = nextLen
+        }
+        visited.removeAll(leg)
+        return max
+    }
+
+    private fun addDirection(
+        nx: Int,
+        ny: Int,
+        visited: MutableSet<Pair<Int, Int>>,
+        map: List<CharArray>,
+        next: MutableSet<Pair<Int, Int>>
+    ) {
+        if ((nx to ny) !in visited && map[ny][nx] != '#') next.add(nx to ny)
     }
 
     override fun part2(data: Sequence<String>): Long {
-        TODO("Not yet implemented")
+        val map = data.map { it.toCharArray() }.toList()
+        return longest(map, 1 to 1, mutableSetOf(1 to 0), 0L, false)
     }
 }
 
 fun main() {
     val dayTest = Day23(23, isTest=true)
     println("Test part1")
-    check(dayTest.runPart1().also { println("-> $it") } == 8L)
-    //println("Test part2")
-    //check(dayTest.runPart2().also { println("-> $it") } == 2286L)
+    check(dayTest.runPart1().also { println("-> $it") } == 94L)
+    println("Test part2")
+    check(dayTest.runPart2().also { println("-> $it") } == 154L)
 
     val day = Day23(23, isTest=false)
     println("Run part1")
