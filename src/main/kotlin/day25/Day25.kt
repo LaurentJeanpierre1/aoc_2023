@@ -2,11 +2,12 @@ package day25
 
 import Day
 import java.io.File
+import java.util.ArrayDeque
 
-class Day25(fileName: String, isTest: Boolean): Day(fileName, isTest) {
+open class Day25(fileName: String, isTest: Boolean): Day(fileName, isTest) {
     constructor(day: Int, isTest: Boolean) : this (makeFileName(day, isTest), isTest)
 
-    private val connected = mutableMapOf<String, MutableList<String>>()
+    protected val connected = mutableMapOf<String, MutableList<String>>()
     fun add(from: String, to: String) {
         connected.compute(from){_, list ->
             if (list == null) mutableListOf(to)
@@ -51,9 +52,13 @@ class Day25(fileName: String, isTest: Boolean): Day(fileName, isTest) {
             connected["cmg"]!!.remove("bvb")
             connected["jqt"]!!.remove("nvd")
         }
+        return computeResult()
+    }
+
+    protected fun computeResult(): Long {
         val firstSet = mutableSetOf<String>()
         var node = connected.keys.first()
-        val queue = java.util.ArrayDeque<String>()
+        val queue = ArrayDeque<String>()
         queue.add(node)
         while (queue.isNotEmpty()) {
             node = queue.poll()
@@ -63,7 +68,8 @@ class Day25(fileName: String, isTest: Boolean): Day(fileName, isTest) {
                 connected.remove(node)
             }
         }
-        return firstSet.size.toLong().also { print("First set is $it large") } * connected.keys.size.toLong().also { print("Second set is $it large") }
+        return firstSet.size.toLong().also { print("First set is $it large ") } * connected.keys.size.toLong()
+            .also { print("Second set is $it large ") }
     }
 
     override fun part2(data: Sequence<String>): Long {
